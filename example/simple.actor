@@ -1,0 +1,5 @@
+Actor Add {
+}
+
+var n = 10;
+Add add = new Add(n);

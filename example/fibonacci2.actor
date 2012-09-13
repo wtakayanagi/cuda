@@ -1,0 +1,39 @@
+アクターの生成は関数呼び出しに類似
+ - 関数の引数
+ - アクターのメッセージ
+ - 引数 = メッセージ
+
+Actor Fibonacci {
+    Fibonacci(int n, Actor r) {
+        if (n < 2) r.value(n);
+        else {
+            Add a = new Add(r);
+            Fibonacci f1 = new Fibonacci(n - 1, a);
+            Fibonacci f2 = new Fibonacci(n - 2, a);
+        }
+    }
+}
+
+Actor Add {
+    Actor r;
+    int result = 0;
+
+    Add(r) { this.r = r; }
+
+    value(int n) {
+        int answer = result;
+        result += n;
+        if (answer) r.value(result);
+    }
+}
+
+Actor Main {
+    Main(int n) {
+        new Fibonacci(n, me);
+    }
+
+    value(int n) {
+        ActGPU.println(n);
+        ActGPU.exit(0);
+    }
+}
