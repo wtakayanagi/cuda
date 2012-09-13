@@ -1,4 +1,5 @@
-# run in mac terminal
+### run in mac terminal
 
-$ sh make_cuda.sh
-$ node parse.js
+`$ sh make_cuda.sh`
+
+`$ node parse.js`
