@@ -1,4 +1,4 @@
-### run in mac terminal
+# run in mac terminal
 
 `$ sh make_cuda.sh`
 
