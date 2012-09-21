@@ -122,16 +122,15 @@ unary_expression
 
 postfix_expression
     = expression:primary_expression operation:(__ postfix_operation)* {
-        return {
-            var result  = primary_expression;
-            for (var i = 0; i < operation.length; ++i) {
-                result = {
-                    type: "PostfixExpression",
-                    base: expression;
-                    operation: operation[i][1]
-                }
+        var result  = expression;
+        for (var i = 0; i < operation.length; ++i) {
+            result = {
+                type: "PostfixExpression",
+                base: expression,
+                operation: operation[i][1]
             }
-        };
+        }
+        return result;
     }
 
 primary_expression
@@ -222,17 +221,18 @@ assignment_operator
 	/ "|="
 
 conditional_expression
-    = condition:logical_or_expression (__ 
+    = condition:logical_or_expression __ 
     "?" __ true_expression:expression __ 
-    ":" __ false_expression:conditional_expression)? {
+    ":" __ false_expression:conditional_expression {
         var result = {
             type: "ConditionalExpression",
-            condition: condition
-            true_expression: true_expression !== "" ? true_expression : null;
-            false_expression: false_expression !== "" ? false_expression : null;
+            condition: condition,
+            true_expression: true_expression !== "" ? true_expression : null,
+            false_expression: false_expression !== "" ? false_expression : null
         }; 
         return result;
     }
+    / logical_or_expression
 
 logical_or_expression
     = head:logical_and_expression tail:(__ "||" __ logical_and_expression)* {
@@ -366,7 +366,7 @@ labeled_statement
         return {
             type: "DefaultClause",
             statement: statement
-        }
+        };
     }
 
 
@@ -383,7 +383,7 @@ selection_statement
             type: "IfStatement",
             condition: condition,
             if_statement: if_statement,
-            else_statement: else_statement !== "" ? else_statement[3] : null;
+            else_statement: else_statement !== "" ? else_statement[3] : null
         };
     }
     / switch_token __ "(" __ expression:expression __ ")" __ clauses:statement {
@@ -416,9 +416,10 @@ iteration_statement
     statement:statement {
         return {
             type: "ForStatement",
-            initializer: initializer !== "" ? initializer : null;
-            test: test !== "" ? test : null;
-            counter: counter !== "" ? counter : null;
+            initializer: initializer !== "" ? initializer : null,
+            test: test !== "" ? test : null,
+            counter: counter !== "" ? counter : null,
+            statement: statement
         };
     } 
 
@@ -428,7 +429,7 @@ jump_statement
     / return_token __ value:expression? __ EOS {
         return {
             type: "ReturnStatement",
-            value: value !== "" ? value : null;
+            value: value !== "" ? value : null
         };
     }
 

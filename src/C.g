@@ -24,8 +24,7 @@ direct_declarator can then easily determine whether the IDENTIFIER
 should be declared as a type name.
 
 I have only tested this on a single file, though it is 3500 lines.
-
-This grammar requires ANTLR v3.0.1 or higher.
+uis grammar requires ANTLR v3.0.1 or higher.
 
 Terence Parr
 July 2006

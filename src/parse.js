@@ -1,8 +1,8 @@
 var fs = require('fs');
 var util = require('util');
-var js = require('c');
+var js = require('./cuda');
 
-fs.readFile('../.example/sample.js',
+fs.readFile('./simple',
     function (err, input) {
         input = '' + input;
         var tree = js.parse(input, 'start');
