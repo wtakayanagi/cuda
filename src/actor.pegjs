@@ -1,6 +1,3 @@
-ActorToken  = "Actor" !IdentifierPart
-NewToken = "new" !Identifier { return "new"; }
-
 Statement
   = Block
   / VariableStatement
@@ -22,6 +19,9 @@ Statement
   / ActorDeclaration
   / ActorDefinition
   / MethodDefinition
+
+ActorToken  = "Actor" !IdentifierPart
+NewToken = "new" !Identifier { return "new"; }
 
 ActorDeclaration 
     = ActorToken __ name:Identifier __
