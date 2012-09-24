@@ -72,8 +72,8 @@ if_token = "if" !identifier_part
 else_token = "else" !identifier_part
 continue_token = "continue" !identifier_part
 break_token = "break" !identifier_part
-int_token = "int" !identifier_part
-actor_token = "Actor" !identifier_part
+int_token = "int" !identifier_part { return "int"; }
+actor_token = "Actor" !identifier_part { return "Actor"; }
 
 // Expression
 argument_expression_list
