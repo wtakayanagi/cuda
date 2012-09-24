@@ -56,21 +56,21 @@ MethodDefinition
     = name:Identifier __ 
     "(" __ params:MethodParameterList? __ ")" __
     "{" __ elements:FunctionBody __ "}" {
-      return {
-        type:     "Method",
-        name:     name,
-        params:   params !== "" ? params : [],
-        elements: elements
-      };
+        return {
+          type:     "Method",
+          name:     name,
+          params:   params !== "" ? params : [],
+          elements: elements
+        };
     }
 
 MethodParameterList
-  = head:TypeIdentifier tail:(__ "," __ TypeIdentifier)* {
-      var result = [head];
-      for (var i = 0; i < tail.length; i++) {
-        result.push(tail[i][3]);
-      }
-      return result;
+    = head:TypeIdentifier tail:(__ "," __ TypeIdentifier)* {
+        var result = [head];
+        for (var i = 0; i < tail.length; i++) {
+            result.push(tail[i][3]);
+          }
+          return result;
     }
 
 TypeIdentifier
