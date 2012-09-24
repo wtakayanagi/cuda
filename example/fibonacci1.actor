@@ -14,7 +14,7 @@ Actor Add {
     Actor r;
     int n0 = 0, n1 = 0;
 
-    Add(slot, r) { this.slot = slot; this.r = r; }
+    Add(int slot, Actor r) { this.slot = slot; this.r = r; }
 
     value(int slot, int n) {
         int answer = false;

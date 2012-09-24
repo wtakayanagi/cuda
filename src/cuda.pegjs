@@ -45,7 +45,7 @@ unicode_digit
     = [0-9]
 
 keyword 
-    = (new_token
+    = new_token
     / case_token
     / switch_token
     / for_token
@@ -56,21 +56,24 @@ keyword
     / if_token
     / else_token
     / continue_token
-    / break_token)
-    !identifier_part
+    / break_token
+    / int_token
+    / actor_token
 
-new_token = "new"
-case_token = "case"
-switch_token = "switch"
-for_token = "for"
-default_token = "default"
-while_token = "while"
-do_token = "do"
-return_token = "return"
-if_token = "if"
-else_token = "else"
-continue_token = "continue"
-break_token = "break"
+new_token = "new" !identifier_part
+case_token = "case" !identifier_part
+switch_token = "switch" !identifier_part
+for_token = "for" !identifier_part
+default_token = "default" !identifier_part
+while_token = "while" !identifier_part
+do_token = "do" !identifier_part
+return_token = "return" !identifier_part
+if_token = "if" !identifier_part
+else_token = "else" !identifier_part
+continue_token = "continue" !identifier_part
+break_token = "break" !identifier_part
+int_token = "int" !identifier_part
+actor_token = "Actor" !identifier_part
 
 // Expression
 argument_expression_list
@@ -135,12 +138,32 @@ postfix_expression
 
 primary_expression
     = name:identifier { return { type: "Variable", name: name }; }
-    / "(" __ expression __ ")" { return expression; }
+    / constant
+    / "(" __ expression:expression __ ")" { return expression; }
+
+constant
+    = value:decimal_literal { 
+        return { 
+            type: "NumericLiteral",
+            value: value
+        }; 
+    }
+
+decimal_literal
+    = "0" / digit:nonzero_digit digits:decimal_digits? { return digit + digits; }
+    
+decimal_digits
+    = digits:decimal_digit+ { return digits.join(""); }
+
+decimal_digit
+    = [0-9]
+
+nonzero_digit
+    = [1-9]
 
 postfix_operation
     = postfix_operator
     / array_expression
-    / new_expression
     / call_expression
     / member_expression
 
@@ -148,18 +171,19 @@ array_expression
     = "[" __ accessor:expression __ "]" { return { type: "ArrayAccess", expression:accessor }; }
 
 new_expression
-    = new_token __ constructor:call_expression {
+    = new_token __ name:identifier __ constructor:call_expression {
         return {
             type: "NewOperator",
+            name: name,
             constructor: constructor
         };
     }
 
 call_expression
-    = "(" __ arguments:argument_expression_list __ ")" {
+    = "(" __ arguments:argument_expression_list? __ ")" {
         return {
             type: "FunctionCall",
-            arguments: arguments
+            arguments: arguments !== "" ? arguments : []
         }; 
     }
 
@@ -202,6 +226,7 @@ assignment_expression
             right: right
         };
     }
+    / new_expression
     / conditional_expression
 
 lvalue
@@ -236,7 +261,7 @@ conditional_expression
 
 logical_or_expression
     = head:logical_and_expression tail:(__ "||" __ logical_and_expression)* {
-        var result = [head];
+        var result = head;
         for (var i = 0; i < tail.length; ++i) {
             result = {
                 type: "BinaryExpression",
@@ -250,7 +275,7 @@ logical_or_expression
 
 logical_and_expression
     = head:inclusive_or_expression tail:(__ "&&" __ inclusive_or_expression)* {
-        var result = [head];
+        var result = head;
         for (var i = 0; i < tail.length; ++i) {
             result = {
                 type: "BinaryExpression",
@@ -264,7 +289,7 @@ logical_and_expression
 
 inclusive_or_expression
     = head:exclusive_or_expression tail:(__ "|" __ exclusive_or_expression)* {
-        var result = [head];
+        var result = head;
         for (var i = 0; i < tail.length; ++i) {
             result = {
                 type: "BinaryExpression",
@@ -278,7 +303,7 @@ inclusive_or_expression
 
 exclusive_or_expression
     = head:and_expression tail:(__ "^" and_expression)* {
-        var result = [head];
+        var result = head;
         for (var i = 0; i < tail.length; ++i) {
             result = {
                 type: "BinaryExpression",
@@ -292,7 +317,7 @@ exclusive_or_expression
 
 and_expression
     = head:equality_expression tail:(__ "&" __ equality_expression)* {
-        var result = [head];
+        var result = head;
         for (var i = 0; i < tail.length; ++i) {
             result = {
                 type: "BinaryExpression",
@@ -306,7 +331,7 @@ and_expression
 
 equality_expression
     = head:relation_expression tail:(__ ("==" / "!=") __ relation_expression)* {
-        var result = [head];
+        var result = head;
         for (var i = 0; i < tail.length; ++i) {
             result = {
                 type: "BinaryExpression",
@@ -320,7 +345,7 @@ equality_expression
 
 relation_expression
     = head:shift_expression tail:(__ ("<=" / ">=" / "<" / ">") __ shift_expression)* {
-        var result = [head];
+        var result = head;
         for (var i = 0; i < tail.length; ++i) {
             result = {
                 type: "BinaryExpression",
@@ -334,7 +359,7 @@ relation_expression
 
 shift_expression
     = head:additive_expression tail:(__ ("<<" / ">>") __ additive_expression)* {
-        var result = [head];
+        var result = head;
         for (var i = 0; i < tail.length; ++i) {
             result = {
                 type: "BinaryExpression",
@@ -348,11 +373,66 @@ shift_expression
 
 // Statements
 statement 
-    = labeled_statement
+    = block
+    / variable_statement
+    / labeled_statement
     / expression_statement
     / selection_statement
     / iteration_statement
     / jump_statement
+    / actor_declaration
+
+block
+    = "{" __ statements:(statement_list __)? "}" {
+        return {
+            type: "Block",
+            statements: statements !== "" ? statements[0] : []
+        }
+    }
+
+variable_statement
+    = type_specifier:type_specifier __ declarations:variable_declaration_list EOS {
+        return {
+            type: "VariableStatement",
+            type_specifier: type_specifier,
+            declarations: declarations
+        };
+    }
+    
+type_specifier
+    = int_token
+    / actor_token
+    / identifier
+
+variable_declaration_list
+    = head:variable_declaration tail:(__ "," __ variable_declaration)* {
+        var result = [head];
+        for (var i = 0; i < tail.length; ++i) {
+            result.push(tail[i][3]);
+        }
+        return result;
+    }
+
+variable_declaration
+    = name:identifier __ value:intialiser? {
+        return {
+            type: "VariableDeclaration",
+            name: name,
+            value: value !== "" ? value : null 
+        };
+    }
+
+intialiser
+    = "=" (!"=") __ expression:assignment_expression { return expression; }
+
+statement_list
+    = head:statement tail:(__ statement)* {
+        var result = [head];
+        for (var i = 0; i < tail.length; ++i) {
+            result.push(tail[i][1]);
+        }
+        return result;
+    }
 
 labeled_statement
     = case_token __ selector:constant_expression __ ":" __ statement:statement {
@@ -368,7 +448,6 @@ labeled_statement
             statement: statement
         };
     }
-
 
 expression_statement
     = ";" { return { type: "EmptyStatement" }; }
@@ -430,6 +509,61 @@ jump_statement
         return {
             type: "ReturnStatement",
             value: value !== "" ? value : null
+        };
+    }
+
+actor_declaration
+    = actor_token __ name:identifier __
+    "{" __ elements:actor_body? __ "}" {
+        return {
+            type: "Actor",
+            name: name,
+            elements: elements !== "" ? elements: []
+        };    
+    }
+
+actor_body
+    = head:actor_element tail:(__ actor_element)* {
+        var result = [head];
+        for (var i = 0; i < tail.length; ++i) {
+            result.push(tail[i][1]);
+        }
+        return result;
+    }
+
+actor_element
+    = statement 
+    / method_declaration
+
+method_declaration
+    = name:identifier __ 
+    "(" __ params:method_parameter_list? __ ")" __
+    "{" __ elements:function_body __ "}" {
+      return {
+        type: "Method",
+        name: name,
+        params: params !== "" ? params : [],
+        elements: elements
+      };
+    }
+
+function_body
+    = elements:source_elements? { return elements !== "" ? elements : []; }
+
+method_parameter_list
+  = head:type_identifier tail:(__ "," __ type_identifier)* {
+      var result = [head];
+      for (var i = 0; i < tail.length; i++) {
+        result.push(tail[i][3]);
+      }
+      return result;
+    }
+
+type_identifier
+    = typeName:type_specifier __ name:identifier {
+        return {
+            typeName: typeName,
+            name: name
         };
     }
 
