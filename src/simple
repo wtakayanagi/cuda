@@ -1,41 +1,7 @@
 Actor Fibonacci {
-    Fibonacci(int n, int slot, Actor r) {
-        if (n < 2) r.value(slot, n);
-        else {
-            Add a = new Add(n, r);
-            Fibonacci f1 = new Fibonacci(n - 1, 0, a);
-            Fibonacci f2 = new Fibonacci(n - 2, 1, a);
-        }
-    }
 }
 
-Actor Add {
-    int slot;
-    Actor r;
-    int n0 = 0, n1 = 0;
-
-    Add(int slot, Actor r) { this.slot = slot; this.r = r; }
-
-    value(int slot, int n) {
-        int answer = false;
-        if (slot == 0) {
-            n0 = n;
-            answer = n1 > 0;
-        } else {
-            n1 = n;
-            answer = n0 > 0;
-        }
-        if (answer) r.value(slot, n0 + n1);
-    }
-}
+int i;
 
 Actor Main {
-    Main(int n) {
-        new Fibonacci(n, me);
-    }
-
-    value(int n) {
-        ActGPU.println(n);
-        ActGPU.exit(0);
-    }
 }

@@ -12,7 +12,7 @@ program
 source_elements
     = head:source_element tail:(__ source_element)* {
         var result = [head];
-        for (var i = 0; i < tail.length; i++) {
+        for (var i = 0; i < tail.length; ++i) {
             result.push(tail[i][1]);
         }
         return result;
@@ -20,6 +20,16 @@ source_elements
 
 source_element
     = statement
+    / actor_declaration
+
+statements
+    = head:statement tail:(__ statement)* {
+        var result = [head];
+        for (var i = 0; i < tail.length; i++) {
+            result.push(tail[i][1]);
+        }
+        return result;
+    }
 
 // Lexical
 identifier
@@ -380,7 +390,6 @@ statement
     / selection_statement
     / iteration_statement
     / jump_statement
-    / actor_declaration
 
 block
     = "{" __ statements:(statement_list __)? "}" {
@@ -539,29 +548,30 @@ method_declaration
     = name:identifier __ 
     "(" __ params:method_parameter_list? __ ")" __
     "{" __ elements:function_body __ "}" {
-      return {
-        type: "Method",
-        name: name,
-        params: params !== "" ? params : [],
-        elements: elements
-      };
+        return {
+            type: "Method",
+            name: name,
+            params: params !== "" ? params : [],
+            elements: elements
+        };
     }
 
 function_body
-    = elements:source_elements? { return elements !== "" ? elements : []; }
+    = elements:statements? { return elements !== "" ? elements : []; }
 
 method_parameter_list
   = head:type_identifier tail:(__ "," __ type_identifier)* {
-      var result = [head];
-      for (var i = 0; i < tail.length; i++) {
-        result.push(tail[i][3]);
-      }
-      return result;
+        var result = [head];
+        for (var i = 0; i < tail.length; i++) {
+          result.push(tail[i][3]);
+        }
+        return result;
     }
 
 type_identifier
     = typeName:type_specifier __ name:identifier {
         return {
+            type: "Parameter",
             typeName: typeName,
             name: name
         };

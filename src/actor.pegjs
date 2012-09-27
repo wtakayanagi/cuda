@@ -1,58 +1,69 @@
-Statement
-  = Block
-  / VariableStatement
-  / EmptyStatement
-  / ExpressionStatement
-  / IfStatement
-  / IterationStatement
-  / ContinueStatement
-  / BreakStatement
-  / ReturnStatement
-  / WithStatement
-  / LabelledStatement
-  / SwitchStatement
-  / ThrowStatement
-  / TryStatement
-  / DebuggerStatement
-  / FunctionDeclaration
-  / FunctionExpression
-  / ActorDeclaration
-  / ActorDefinition
-  / MethodDefinition
+SourceElements
+    = head:SourceElement tail:(__ SourceElement)* {
+        var result = [head];
+        for (var i = 0; i < tail.length; ++i) {
+            result.push(tail[i][1]);
+        }
+        return result;
+    }
 
-ActorToken  = "Actor" !IdentifierPart
-NewToken = "new" !Identifier { return "new"; }
+SourceElement
+    = ActorDeclaration
+    / Statement
+
+FunctionBody
+    = elements:Statements? { return elements !== "" ? elements : []; }
+
+Statements
+    = head:Statement tail:(__ Statement)* {
+        var result = [head];
+        for (var i = 0; i < tail.length; i++) {
+            result.push(tail[i][1]);
+        }
+        return result;
+    }
+
+ActorToken  = "Actor" !IdentifierPart { return "Actor"; }
+VarToken = "int" !IdentifierPart { return "int"; }
 
 ActorDeclaration 
     = ActorToken __ name:Identifier __
-    "{" __ elements:FunctionBody __ "}" {      
+    "{" __ elements:ActorBody? __ "}" {      
         return {
-            type: "ActorDeclaration",
+            type: "Actor",
             name: name,
-            elements: elements
+            elements: elements !== "" ? elements : []
         };
     } 
 
-ActorDefinition
-    = objectType:Identifier __ objectName:Identifier __ 
-    "=" __ NewToken __ constructor:Identifier __ arguments:Arguments EOS {
-        return  {
-            type: "ActorDefinition",
-            objectType: objectType,
-            objectName: objectName,
-            constructor: constructor,
-            arguments: arguments
+ActorBody
+    = head:ActorElement tail:(__ ActorElement)* {
+        var result = [head];
+        for (var i = 0; i < tail.length; i++) {
+            result.push(tail[i][1]);
         }
-    }
-    / objectType:Identifier __ objectName:Identifier __ EOS {
-        return  {
-            type: "ActorDefinition",
-            objectType: objectType,
-            objectName: objectName,
-        }
+        return result;
     }
 
-MethodDefinition
+ActorElement
+    = Statement
+    / MethodDeclaration
+
+VariableStatement
+    = typeSpecifier:TypeSpecifier __ declarations:VariableDeclarationList EOS {
+        return {
+            type: "VariableStatement",
+            typeSpecifier: typeSpecifier,
+            declarations: declarations
+        };
+    }
+
+TypeSpecifier
+    = VarToken
+    / ActorToken
+    / Identifier
+
+MethodDeclaration
     = name:Identifier __ 
     "(" __ params:MethodParameterList? __ ")" __
     "{" __ elements:FunctionBody __ "}" {
@@ -74,10 +85,10 @@ MethodParameterList
     }
 
 TypeIdentifier
-    = typeName:(VarToken / ActorToken) __ name:Identifier {
+    = typeSpecifier:TypeSpecifier __ name:Identifier {
         return {
-            type: "Variable",
-            typeName: typeName,
+            type: "Parameter",
+            typeName: typeSpecifier,
             name: name
         };
     }
