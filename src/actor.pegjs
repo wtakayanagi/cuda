@@ -25,6 +25,38 @@ Statements
 
 ActorToken  = "Actor" !IdentifierPart { return "Actor"; }
 VarToken = "int" !IdentifierPart { return "int"; }
+Keyword
+  = (
+        "break"
+      / "case"
+      / "catch"
+      / "continue"
+      / "debugger"
+      / "default"
+      / "delete"
+      / "do"
+      / "else"
+      / "finally"
+      / "for"
+      / "function"
+      / "if"
+      / "instanceof"
+      / "in"
+      / "new"
+      / "return"
+      / "switch"
+      / "this"
+      / "throw"
+      / "try"
+      / "typeof"
+      / "var"
+      / "void"
+      / "while"
+      / "with"
+      / "Actor"
+      / "int"
+    )
+    !IdentifierPart
 
 ActorDeclaration 
     = ActorToken __ name:Identifier __
